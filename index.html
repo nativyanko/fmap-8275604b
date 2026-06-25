@@ -1,0 +1,481 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Bliss vs Voy — Funnel Map</title>
+<style>
+ :root{--voy:#1f3d2b;--voylt:#f4f1e9;--bliss:#4b2e83;--blisslt:#f3f0fa;--ink:#1b1b1b;}
+ *{box-sizing:border-box;}
+ html,body{margin:0;height:100%;overflow:hidden;background:#eef0ec;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+ #stage{position:absolute;inset:0;cursor:grab;}
+ #stage.grabbing{cursor:grabbing;}
+ #world{position:absolute;left:0;top:0;transform-origin:0 0;}
+ .card{position:absolute;background:#fff;border-radius:12px;border:1px solid #e2ddd0;box-shadow:0 8px 24px rgba(0,0,0,.10);overflow:hidden;cursor:move;}
+ .cardel{position:absolute;top:6px;right:6px;z-index:3;width:22px;height:22px;border-radius:50%;border:none;background:rgba(217,83,79,.0);color:#d9534f;font-size:18px;line-height:1;cursor:pointer;opacity:0;transition:opacity .12s;}
+ .card:hover .cardel{opacity:1;background:rgba(255,255,255,.85);}
+ .cardel:hover{background:#d9534f;color:#fff;}
+ .card.voy{border-color:#cfc8b3;}
+ .card.bliss{border-color:#d8ccf0;}
+ .card.branch{border-color:#cfc8b3;background:#fbfaf6;}
+ .card img{width:100%;display:block;cursor:zoom-in;}
+ #lightbox{display:none;position:fixed;inset:0;z-index:100;background:rgba(18,18,18,.93);flex-direction:column;align-items:center;justify-content:center;cursor:zoom-out;padding:28px;}
+ #lightbox img{max-width:96vw;max-height:86vh;border-radius:8px;box-shadow:0 24px 70px rgba(0,0,0,.55);background:#fff;}
+ #lightbox .lbcap{color:#fff;font-size:15px;font-weight:600;margin-top:14px;text-align:center;max-width:82vw;}
+ #lightbox .lbhint{position:fixed;top:18px;right:22px;color:#cfcfcf;font-size:13px;}
+ .card .miss{padding:40px;text-align:center;color:#aaa;}
+ .lbl{font-size:13px;font-weight:600;color:var(--ink);padding:9px 11px 8px;line-height:1.25;display:flex;gap:7px;align-items:flex-start;min-height:44px;}
+ .num{flex:none;font-size:11px;font-weight:800;color:#fff;background:var(--voy);border-radius:5px;padding:2px 6px;}
+ .card.bliss .num{background:var(--bliss);}
+ .card.branch .num{background:#7a5b2a;}
+ .lane-head{position:absolute;text-align:center;font-weight:800;letter-spacing:.03em;font-size:18px;padding:12px;border-radius:10px;}
+ .voyhead{background:var(--voy);color:#fff;}
+ .blisshead{background:var(--bliss);color:#fff;}
+ .branchhead{background:#7a5b2a;color:#fff;font-size:13px;}
+ .vline{position:absolute;width:2px;background:#bdb7a8;}
+ .card.bliss + .vline,.vline.bl{background:#c3b6e0;}
+ .branchconn{position:absolute;height:2px;background:#7a5b2a;}
+ .branchlbl{position:absolute;font-size:11px;font-weight:800;color:#7a5b2a;background:#fff;padding:1px 6px;border-radius:4px;border:1px solid #7a5b2a;}
+ .anno{background:#fbfdfb;box-shadow:0 4px 16px rgba(0,0,0,.09);overflow:visible;}
+ .anno.annogood{border:1px solid #cfe4d6;border-left:5px solid #1f6f43;}
+ .anno.annofix{border:1px solid #ecdcc2;border-left:5px solid #c8801f;background:#fffdfa;}
+ .annotitle{font-weight:800;font-size:14.5px;padding:11px 13px 2px;color:#14301f;line-height:1.25;}
+ .anno.annofix .annotitle{color:#7a4d10;}
+ .annobody{font-size:12.5px;color:#454545;padding:3px 13px 12px;line-height:1.4;}
+ .annoconn{position:absolute;height:2px;background:#1f6f43;opacity:.45;}
+ .annoconn.fix{background:#c8801f;}
+ .sidecard{background:#fbfaf7;box-shadow:0 6px 22px rgba(0,0,0,.10);overflow:visible;}
+ .sidecard.pb{border:1px solid #cdd9cf;border-left:6px solid #1f3d2b;}
+ .sidecard.usp{border:1px solid #d8ccf0;border-left:6px solid #4b2e83;background:#fdfbff;}
+ .sidetitle{font-family:Georgia,serif;font-weight:700;font-size:21px;padding:15px 20px 4px;color:#16241b;line-height:1.22;}
+ .sidecard.usp .sidetitle{color:#3a2363;}
+ .snum{display:inline-block;font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:13px;font-weight:800;color:#fff;background:#1f3d2b;border-radius:6px;padding:2px 9px;margin-right:10px;vertical-align:2px;}
+ .sidecard.usp .snum{background:#4b2e83;}
+ .sidebody{font-size:15px;color:#3a3a3a;padding:6px 20px 18px;line-height:1.5;}
+ .sidehead{position:absolute;font-family:Georgia,serif;font-weight:800;font-size:25px;color:#16241b;padding:16px 12px 12px;border-bottom:3px solid #16241b;}
+ .sidehead.usphead{color:#3a2363;border-color:#3a2363;}
+ .sidehead.recohead{color:#137a45;border-color:#137a45;}
+ .sidehead.subhead{font-size:17px;font-weight:700;color:#777;border-color:#bbb;}
+ .recocard{background:#f7fbf8;box-shadow:0 5px 18px rgba(0,0,0,.09);overflow:visible;}
+ .recocard.new{border:1px solid #bfe0cb;border-left:6px solid #1f9d57;}
+ .recocard.fix{border:1px solid #ecd9bd;border-left:6px solid #d98a1f;}
+ .recocard.keep{border:1px solid #dddddd;border-left:6px solid #aaaaaa;background:#fafafa;}
+ .recoflag{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.08em;padding:2px 7px;border-radius:5px;margin:11px 0 0 14px;color:#fff;}
+ .recoflag.new{background:#1f9d57;} .recoflag.fix{background:#d98a1f;} .recoflag.keep{background:#9a9a9a;}
+ .recotitle{font-weight:700;font-size:15.5px;padding:6px 15px 3px;color:#16241b;line-height:1.25;}
+ .rnum{display:inline-block;font-size:11px;font-weight:800;color:#fff;background:#16241b;border-radius:5px;padding:1px 6px;margin-right:8px;}
+ .recobody{font-size:12.5px;color:#454545;padding:2px 15px 13px;line-height:1.42;}
+ .playbook{position:absolute;background:#fff;border:1px solid #e2ddd0;border-radius:18px;box-shadow:0 12px 34px rgba(0,0,0,.10);padding:26px 34px;}
+ .playbook h2{font-family:Georgia,serif;font-size:27px;margin:0 0 18px;color:#16241b;}
+ .playbook ol{column-count:2;column-gap:46px;margin:0;padding-left:22px;}
+ .playbook li{break-inside:avoid;margin-bottom:15px;font-size:14px;}
+ .playbook li b{display:block;color:#16241b;font-size:15.5px;margin-bottom:3px;}
+ .playbook li span{color:#555;line-height:1.4;}
+ .note{position:absolute;min-width:150px;max-width:240px;background:#fff7c2;border:1px solid #e6d870;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,.18);padding:8px 10px;font-size:13px;color:#3a3320;cursor:move;}
+ .note[contenteditable]{outline:none;}
+ .note .del{position:absolute;top:-9px;right:-9px;width:20px;height:20px;border-radius:50%;background:#d9534f;color:#fff;border:none;font-size:13px;line-height:1;cursor:pointer;}
+ #bar{position:fixed;top:14px;left:14px;z-index:50;background:#fff;border-radius:10px;box-shadow:0 4px 14px rgba(0,0,0,.15);padding:8px 12px;font-size:13px;display:flex;gap:12px;align-items:center;}
+ #bar b{font-family:Georgia,serif;}
+ #bar button{font-size:12px;border:1px solid #ccc;background:#f7f7f5;border-radius:6px;padding:5px 9px;cursor:pointer;}
+ #bar .z{min-width:46px;text-align:center;color:#666;}
+ #hint{position:fixed;bottom:14px;left:14px;z-index:50;background:rgba(255,255,255,.92);border-radius:8px;padding:8px 12px;font-size:12px;color:#555;box-shadow:0 4px 14px rgba(0,0,0,.12);}
+</style></head>
+<body>
+<div id="bar">
+  <b>Bliss vs Voy — Funnel Map</b>
+  <button id="fit">Fit to screen</button>
+  <button id="zin">+</button><span class="z" id="zlvl">100%</span><button id="zout">&minus;</button>
+  <button id="addnote">+ Sticky note</button>
+  <button id="clearnotes">Clear notes</button>
+  <button id="toggleanno">Hide annotations</button>
+  <button id="toggleconn">Hide flow lines</button>
+  <button id="resetlayout">Reset layout</button>
+</div>
+<div id="hint">Drag empty space to pan · scroll to zoom · click a screenshot to view it full screen · drag a card to move it · hover a card and click &times; to delete · double-click empty space to drop a note · all edits save in this browser</div>
+<div id="stage"><div id="world"><div class="lane-head voyhead" style="left:460px;top:40px;width:380px">VOY — full funnel</div>
+<div class="lane-head blisshead" style="left:1320px;top:40px;width:380px">BLISS — full funnel</div>
+<div class="lane-head branchhead" style="left:60px;top:1530px;width:300px">VOY · returning-user branch (answer "YES" at step 6)</div>
+<div class="card voy" data-id="voy-01_intent" data-x="460" data-y="150" style="left:460px;top:150px;width:380px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">V1</span>Where are you right now?</div><img src="img/map_voy/01_intent.jpg" loading="lazy"/></div>
+<div class="vline" style="left:650px;top:400px;height:40px"></div>
+<div class="card voy" data-id="voy-02_social_proof" data-x="460" data-y="440" style="left:460px;top:440px;width:380px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">V2</span>Social proof: 100k+ people, Trustpilot 4.7</div><img src="img/map_voy/02_social_proof.jpg" loading="lazy"/></div>
+<div class="vline" style="left:650px;top:690px;height:40px"></div>
+<div class="card voy" data-id="voy-03_clinician" data-x="460" data-y="730" style="left:460px;top:730px;width:380px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">V3</span>Clinician-led care: treatment built around you</div><img src="img/map_voy/03_clinician.jpg" loading="lazy"/></div>
+<div class="vline" style="left:650px;top:980px;height:40px"></div>
+<div class="card voy" data-id="voy-04_reasons" data-x="460" data-y="1020" style="left:460px;top:1020px;width:380px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">V4</span>What are your main reasons for losing weight?</div><img src="img/map_voy/04_reasons.jpg" loading="lazy"/></div>
+<div class="vline" style="left:650px;top:1270px;height:40px"></div>
+<div class="card voy" data-id="voy-05_validation" data-x="460" data-y="1310" style="left:460px;top:1310px;width:380px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">V5</span>94% feel healthier (validation)</div><img src="img/map_voy/05_validation.jpg" loading="lazy"/></div>
+<div class="vline" style="left:650px;top:1560px;height:40px"></div>
+<div class="card voy" data-id="voy-06_prev_treatment" data-x="460" data-y="1600" style="left:460px;top:1600px;width:380px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">V6</span>Previously been on weight-loss treatment?</div><img src="img/map_voy/06_prev_treatment.jpg" loading="lazy"/></div>
+<div class="vline" style="left:650px;top:1850px;height:40px"></div>
+<div class="card voy" data-id="voy-07_email" data-x="460" data-y="1890" style="left:460px;top:1890px;width:380px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">V7</span>What&#x27;s your email address? (with Skip)</div><img src="img/map_voy/07_email.jpg" loading="lazy"/></div>
+<div class="vline" style="left:650px;top:2140px;height:40px"></div>
+<div class="card voy" data-id="voy-08_height" data-x="460" data-y="2180" style="left:460px;top:2180px;width:380px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">V8</span>What&#x27;s your height?</div><img src="img/map_voy/08_height.jpg" loading="lazy"/></div>
+<div class="vline" style="left:650px;top:2430px;height:40px"></div>
+<div class="card voy" data-id="voy-09_weight" data-x="460" data-y="2470" style="left:460px;top:2470px;width:380px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">V9</span>What&#x27;s your weight?</div><img src="img/map_voy/09_weight.jpg" loading="lazy"/></div>
+<div class="vline" style="left:650px;top:2720px;height:40px"></div>
+<div class="card voy" data-id="voy-10_projection" data-x="460" data-y="2760" style="left:460px;top:2760px;width:380px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">V10</span>You could lose 20kg — personalised projection</div><img src="img/map_voy/10_projection.jpg" loading="lazy"/></div>
+<div class="vline" style="left:650px;top:3010px;height:40px"></div>
+<div class="card voy" data-id="voy-11_goal_weight" data-x="460" data-y="3050" style="left:460px;top:3050px;width:380px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">V11</span>Do you have a goal weight?</div><img src="img/map_voy/11_goal_weight.jpg" loading="lazy"/></div>
+<div class="vline" style="left:650px;top:3300px;height:40px"></div>
+<div class="card voy" data-id="voy-12_ethnicity" data-x="460" data-y="3340" style="left:460px;top:3340px;width:380px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">V12</span>What is your ethnic background?</div><img src="img/map_voy/12_ethnicity.jpg" loading="lazy"/></div>
+<div class="vline" style="left:650px;top:3590px;height:40px"></div>
+<div class="card voy" data-id="voy-13_sex" data-x="460" data-y="3630" style="left:460px;top:3630px;width:380px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">V13</span>What was your sex at birth?</div><img src="img/map_voy/13_sex.jpg" loading="lazy"/></div>
+<div class="vline" style="left:650px;top:3880px;height:40px"></div>
+<div class="card voy" data-id="voy-14_pregnancy" data-x="460" data-y="3920" style="left:460px;top:3920px;width:380px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">V14</span>Pregnant, breastfeeding or conceiving?</div><img src="img/map_voy/14_pregnancy.jpg" loading="lazy"/></div>
+<div class="vline" style="left:650px;top:4170px;height:40px"></div>
+<div class="card voy" data-id="voy-15_contraception" data-x="460" data-y="4210" style="left:460px;top:4210px;width:380px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">V15</span>Pregnancy &amp; contraception notice</div><img src="img/map_voy/15_contraception.jpg" loading="lazy"/></div>
+<div class="vline" style="left:650px;top:4460px;height:40px"></div>
+<div class="card voy" data-id="voy-16_struggle_duration" data-x="460" data-y="4500" style="left:460px;top:4500px;width:380px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">V16</span>How long have you struggled?</div><img src="img/map_voy/16_struggle_duration.jpg" loading="lazy"/></div>
+<div class="vline" style="left:650px;top:4750px;height:40px"></div>
+<div class="card voy" data-id="voy-17_tried_before" data-x="460" data-y="4790" style="left:460px;top:4790px;width:380px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">V17</span>What have you tried in the past?</div><img src="img/map_voy/17_tried_before.jpg" loading="lazy"/></div>
+<div class="vline" style="left:650px;top:5040px;height:40px"></div>
+<div class="card voy" data-id="voy-18_exercise_challenges" data-x="460" data-y="5080" style="left:460px;top:5080px;width:380px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">V18</span>Challenges with exercise?</div><img src="img/map_voy/18_exercise_challenges.jpg" loading="lazy"/></div>
+<div class="vline" style="left:650px;top:5330px;height:40px"></div>
+<div class="card voy" data-id="voy-19_eating_challenges" data-x="460" data-y="5370" style="left:460px;top:5370px;width:380px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">V19</span>Challenges with eating habits?</div><img src="img/map_voy/19_eating_challenges.jpg" loading="lazy"/></div>
+<div class="vline" style="left:650px;top:5620px;height:40px"></div>
+<div class="card voy" data-id="voy-20_ontrack_challenges" data-x="460" data-y="5660" style="left:460px;top:5660px;width:380px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">V20</span>Challenges staying on track?</div><img src="img/map_voy/20_ontrack_challenges.jpg" loading="lazy"/></div>
+<div class="vline" style="left:650px;top:5910px;height:40px"></div>
+<div class="card voy" data-id="voy-21_serious_conditions" data-x="460" data-y="5950" style="left:460px;top:5950px;width:380px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">V21</span>Serious medical conditions?</div><img src="img/map_voy/21_serious_conditions.jpg" loading="lazy"/></div>
+<div class="vline" style="left:650px;top:6200px;height:40px"></div>
+<div class="card voy" data-id="voy-22_glaucoma" data-x="460" data-y="6240" style="left:460px;top:6240px;width:380px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">V22</span>Do you suffer from glaucoma?</div><img src="img/map_voy/22_glaucoma.jpg" loading="lazy"/></div>
+<div class="vline" style="left:650px;top:6490px;height:40px"></div>
+<div class="card voy" data-id="voy-23_comorbidities" data-x="460" data-y="6530" style="left:460px;top:6530px;width:380px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">V23</span>Diagnosed with any of these conditions?</div><img src="img/map_voy/23_comorbidities.jpg" loading="lazy"/></div>
+<div class="vline" style="left:650px;top:6780px;height:40px"></div>
+<div class="card voy" data-id="voy-24_other_meds" data-x="460" data-y="6820" style="left:460px;top:6820px;width:380px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">V24</span>Taking any other medications?</div><img src="img/map_voy/24_other_meds.jpg" loading="lazy"/></div>
+<div class="vline" style="left:650px;top:7070px;height:40px"></div>
+<div class="card voy" data-id="voy-25_allergies" data-x="460" data-y="7110" style="left:460px;top:7110px;width:380px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">V25</span>Do you have any allergies?</div><img src="img/map_voy/25_allergies.jpg" loading="lazy"/></div>
+<div class="vline" style="left:650px;top:7360px;height:40px"></div>
+<div class="card voy" data-id="voy-26_gp_sharing" data-x="460" data-y="7400" style="left:460px;top:7400px;width:380px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">V26</span>Can we share your info with your GP?</div><img src="img/map_voy/26_gp_sharing.jpg" loading="lazy"/></div>
+<div class="vline" style="left:650px;top:7650px;height:40px"></div>
+<div class="card voy" data-id="voy-27_med_preference" data-x="460" data-y="7690" style="left:460px;top:7690px;width:380px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">V27</span>Medication preference (GLP-1 23% vs Orlistat 8%)</div><img src="img/map_voy/27_med_preference.jpg" loading="lazy"/></div>
+<div class="vline" style="left:650px;top:7940px;height:40px"></div>
+<div class="card voy" data-id="voy-28_whats_important" data-x="460" data-y="7980" style="left:460px;top:7980px;width:380px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">V28</span>What&#x27;s important to you?</div><img src="img/map_voy/28_whats_important.jpg" loading="lazy"/></div>
+<div class="vline" style="left:650px;top:8230px;height:40px"></div>
+<div class="card voy" data-id="voy-29_consent" data-x="460" data-y="8270" style="left:460px;top:8270px;width:380px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">V29</span>Final consent</div><img src="img/map_voy/29_consent.jpg" loading="lazy"/></div>
+<div class="vline" style="left:650px;top:8520px;height:40px"></div>
+<div class="card voy" data-id="voy-30_building_plan" data-x="460" data-y="8560" style="left:460px;top:8560px;width:380px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">V30</span>We&#x27;re building your plan (loader)</div><img src="img/map_voy/30_building_plan.jpg" loading="lazy"/></div>
+<div class="vline" style="left:650px;top:8810px;height:40px"></div>
+<div class="card voy" data-id="voy-31_assessment_result" data-x="460" data-y="8850" style="left:460px;top:8850px;width:380px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">V31</span>Your assessment: reach 75kg, lose 20kg</div><img src="img/map_voy/31_assessment_result.jpg" loading="lazy"/></div>
+<div class="vline" style="left:650px;top:9100px;height:40px"></div>
+<div class="card voy" data-id="voy-32_how_med_helps" data-x="460" data-y="9140" style="left:460px;top:9140px;width:380px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">V32</span>How medication helps (mirrors your answers)</div><img src="img/map_voy/32_how_med_helps.jpg" loading="lazy"/></div>
+<div class="vline" style="left:650px;top:9390px;height:40px"></div>
+<div class="card voy" data-id="voy-33_what_to_expect" data-x="460" data-y="9430" style="left:460px;top:9430px;width:380px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">V33</span>What to expect from Voy (Dr Chaudry)</div><img src="img/map_voy/33_what_to_expect.jpg" loading="lazy"/></div>
+<div class="vline" style="left:650px;top:9680px;height:40px"></div>
+<div class="card voy" data-id="voy-34_support" data-x="460" data-y="9720" style="left:460px;top:9720px;width:380px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">V34</span>Support at every step</div><img src="img/map_voy/34_support.jpg" loading="lazy"/></div>
+<div class="vline" style="left:650px;top:9970px;height:40px"></div>
+<div class="card voy" data-id="voy-35_maximise_results" data-x="460" data-y="10010" style="left:460px;top:10010px;width:380px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">V35</span>A plan designed to maximise results</div><img src="img/map_voy/35_maximise_results.jpg" loading="lazy"/></div>
+<div class="vline" style="left:650px;top:10260px;height:40px"></div>
+<div class="card voy" data-id="voy-36_recommendations" data-x="460" data-y="10300" style="left:460px;top:10300px;width:380px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">V36</span>Recommendation: Wegovy pill + AI Q&amp;A</div><img src="img/map_voy/36_recommendations.jpg" loading="lazy"/></div>
+<div class="vline" style="left:650px;top:10550px;height:40px"></div>
+<div class="card voy" data-id="voy-37_pricing" data-x="460" data-y="10590" style="left:460px;top:10590px;width:380px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">V37</span>Pricing: £79 first month (was £154), 6-mo default</div><img src="img/map_voy/37_pricing.jpg" loading="lazy"/></div>
+<div class="vline" style="left:650px;top:10840px;height:40px"></div>
+<div class="card voy" data-id="voy-38_supplement_upsell" data-x="460" data-y="10880" style="left:460px;top:10880px;width:380px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">V38</span>Upsell: +£19/mo Replenish supplement</div><img src="img/map_voy/38_supplement_upsell.jpg" loading="lazy"/></div>
+<div class="vline" style="left:650px;top:11130px;height:40px"></div>
+<div class="card voy" data-id="voy-39_checkout" data-x="460" data-y="11170" style="left:460px;top:11170px;width:380px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">V39</span>Checkout: inline account + order summary, value stack, £263 → £188</div><img src="img/map_voy/39_checkout.jpg" loading="lazy"/></div>
+<div class="card bliss" data-id="bliss-05_dob" data-x="1320" data-y="150" style="left:1320px;top:150px;width:380px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">B1</span>What is your date of birth?</div><img src="img/map_bliss/05_dob.jpg" loading="lazy"/></div>
+<div class="vline" style="left:1510px;top:400px;height:40px"></div>
+<div class="card bliss" data-id="bliss-06_ethnicity" data-x="1320" data-y="440" style="left:1320px;top:440px;width:380px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">B2</span>What is your ethnicity?</div><img src="img/map_bliss/06_ethnicity.jpg" loading="lazy"/></div>
+<div class="vline" style="left:1510px;top:690px;height:40px"></div>
+<div class="card bliss" data-id="bliss-07_sex" data-x="1320" data-y="730" style="left:1320px;top:730px;width:380px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">B3</span>What sex were you assigned at birth?</div><img src="img/map_bliss/07_sex.jpg" loading="lazy"/></div>
+<div class="vline" style="left:1510px;top:980px;height:40px"></div>
+<div class="card bliss" data-id="bliss-08_height_weight" data-x="1320" data-y="1020" style="left:1320px;top:1020px;width:380px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">B4</span>What is your height and weight?</div><img src="img/map_bliss/08_height_weight.jpg" loading="lazy"/></div>
+<div class="vline" style="left:1510px;top:1270px;height:40px"></div>
+<div class="card bliss" data-id="bliss-09_conditions" data-x="1320" data-y="1310" style="left:1320px;top:1310px;width:380px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">B5</span>Diagnosed with any of these conditions?</div><img src="img/map_bliss/09_conditions.jpg" loading="lazy"/></div>
+<div class="vline" style="left:1510px;top:1560px;height:40px"></div>
+<div class="card bliss" data-id="bliss-10_prior_meds" data-x="1320" data-y="1600" style="left:1320px;top:1600px;width:380px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">B6</span>Previously taken weight-loss medication?</div><img src="img/map_bliss/10_prior_meds.jpg" loading="lazy"/></div>
+<div class="vline" style="left:1510px;top:1850px;height:40px"></div>
+<div class="card bliss" data-id="bliss-11_other_meds_allergies" data-x="1320" data-y="1890" style="left:1320px;top:1890px;width:380px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">B7</span>Other medications or allergies?</div><img src="img/map_bliss/11_other_meds_allergies.jpg" loading="lazy"/></div>
+<div class="vline" style="left:1510px;top:2140px;height:40px"></div>
+<div class="card bliss" data-id="bliss-12_consent_declaration" data-x="1320" data-y="2180" style="left:1320px;top:2180px;width:380px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">B8</span>Consent declaration</div><img src="img/map_bliss/12_consent_declaration.jpg" loading="lazy"/></div>
+<div class="vline" style="left:1510px;top:2430px;height:40px"></div>
+<div class="card bliss" data-id="bliss-13_potential_results" data-x="1320" data-y="2470" style="left:1320px;top:2470px;width:380px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">B9</span>Your Potential Results: up to 19.9kg (small text)</div><img src="img/map_bliss/13_potential_results.jpg" loading="lazy"/></div>
+<div class="vline" style="left:1510px;top:2720px;height:40px"></div>
+<div class="card bliss" data-id="bliss-14_product_options" data-x="1320" data-y="2760" style="left:1320px;top:2760px;width:380px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">B10</span>Product options (all meds + prices)</div><img src="img/map_bliss/14_product_options.jpg" loading="lazy"/></div>
+<div class="vline" style="left:1510px;top:3010px;height:40px"></div>
+<div class="card bliss" data-id="bliss-15_product_plan" data-x="1320" data-y="3050" style="left:1320px;top:3050px;width:380px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">B11</span>Your plan: Mounjaro injection</div><img src="img/map_bliss/15_product_plan.jpg" loading="lazy"/></div>
+<div class="vline" style="left:1510px;top:3300px;height:40px"></div>
+<div class="card bliss" data-id="bliss-16_subscription_select" data-x="1320" data-y="3340" style="left:1320px;top:3340px;width:380px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">B12</span>Select subscription length (defaults to 1 month)</div><img src="img/map_bliss/16_subscription_select.jpg" loading="lazy"/></div>
+<div class="vline" style="left:1510px;top:3590px;height:40px"></div>
+<div class="card bliss" data-id="bliss-17_checkout" data-x="1320" data-y="3630" style="left:1320px;top:3630px;width:380px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">B13</span>Checkout (generic basket + sign-in)</div><img src="img/map_bliss/17_checkout.jpg" loading="lazy"/></div>
+<div class="card branch" data-id="branch-01_prev_treatment_yes" data-x="60" data-y="1600" style="left:60px;top:1600px;width:300px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">Y1</span>Previously on treatment? YES</div><img src="img/voyyes/01_prev_treatment_yes.jpg" loading="lazy"/></div>
+<div class="vline" style="left:210px;top:1850px;height:40px"></div>
+<div class="card branch" data-id="branch-02_switch_wegovy" data-x="60" data-y="1890" style="left:60px;top:1890px;width:300px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">Y2</span>Switch to Wegovy (20.7% vs Mounjaro 22.5%)</div><img src="img/voyyes/02_switch_wegovy.jpg" loading="lazy"/></div>
+<div class="vline" style="left:210px;top:2140px;height:40px"></div>
+<div class="card branch" data-id="branch-03_competitor_source" data-x="60" data-y="2180" style="left:60px;top:2180px;width:300px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">Y3</span>Where did you last get it? (competitors)</div><img src="img/voyyes/03_competitor_source.jpg" loading="lazy"/></div>
+<div class="vline" style="left:210px;top:2430px;height:40px"></div>
+<div class="card branch" data-id="branch-04_last_dose" data-x="60" data-y="2470" style="left:60px;top:2470px;width:300px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">Y4</span>What was your last dose?</div><img src="img/voyyes/04_last_dose.jpg" loading="lazy"/></div>
+<div class="vline" style="left:210px;top:2720px;height:40px"></div>
+<div class="card branch" data-id="branch-05_side_effects" data-x="60" data-y="2760" style="left:60px;top:2760px;width:300px"><button class="cardel" title="Delete this card">&times;</button><div class="lbl"><span class="num">Y5</span>Any moderate/severe side effects?</div><img src="img/voyyes/05_side_effects.jpg" loading="lazy"/></div>
+<div class="branchconn" style="left:360px;top:1710px;width:100px"></div>
+<div class="branchlbl" style="left:370px;top:1680px">YES</div>
+<div class="annoconn" style="left:840px;top:178px;width:40px"></div>
+<div class="card anno annogood" data-id="anno-annogood-0" data-x="880" data-y="150" style="left:880px;top:150px;width:360px"><button class="cardel" title="Delete">&times;</button><div class="annotitle">Frictionless first &#x27;yes&#x27;</div><div class="annobody">One tap, no Continue button. A tiny commitment that starts momentum and makes the next answer feel automatic.</div></div>
+<div class="annoconn" style="left:840px;top:468px;width:40px"></div>
+<div class="card anno annogood" data-id="anno-annogood-1" data-x="880" data-y="440" style="left:880px;top:440px;width:360px"><button class="cardel" title="Delete">&times;</button><div class="annotitle">Proof before the ask</div><div class="annobody">Real names, real kg, Trustpilot 4.7. For someone who has failed before, the first job is simply to believe it can work.</div></div>
+<div class="annoconn" style="left:840px;top:758px;width:40px"></div>
+<div class="card anno annogood" data-id="anno-annogood-2" data-x="880" data-y="730" style="left:880px;top:730px;width:360px"><button class="cardel" title="Delete">&times;</button><div class="annotitle">Kill the &#x27;is this a scam&#x27; fear</div><div class="annobody">Pharmacy badges and UK clinicians pre-empt the safety and legitimacy doubt before it can even form.</div></div>
+<div class="annoconn" style="left:840px;top:1048px;width:40px"></div>
+<div class="card anno annogood" data-id="anno-annogood-3" data-x="880" data-y="1020" style="left:880px;top:1020px;width:360px"><button class="cardel" title="Delete">&times;</button><div class="annotitle">Make them say why, in their words</div><div class="annobody">Self-stated motivation sticks far harder than reasons you give them, and hands Voy the emotional drivers to echo later.</div></div>
+<div class="annoconn" style="left:840px;top:1338px;width:40px"></div>
+<div class="card anno annogood" data-id="anno-annogood-4" data-x="880" data-y="1310" style="left:880px;top:1310px;width:360px"><button class="cardel" title="Delete">&times;</button><div class="annotitle">Reward the disclosure</div><div class="annobody">A quick &#x27;94% feel healthier&#x27; repays the effort with reassurance and more proof. Belief stays high.</div></div>
+<div class="annoconn" style="left:840px;top:1628px;width:40px"></div>
+<div class="card anno annogood" data-id="anno-annogood-5" data-x="880" data-y="1600" style="left:880px;top:1600px;width:360px"><button class="cardel" title="Delete">&times;</button><div class="annotitle">Branch the experience</div><div class="annobody">Splits new patients from switchers so each gets a tailored path. &#x27;Built for me&#x27; = lower resistance.</div></div>
+<div class="annoconn" style="left:840px;top:1918px;width:40px"></div>
+<div class="card anno annogood" data-id="anno-annogood-6" data-x="880" data-y="1890" style="left:880px;top:1890px;width:360px"><button class="cardel" title="Delete">&times;</button><div class="annotitle">Capture after sunk cost</div><div class="annobody">They&#x27;ve invested several answers, so they won&#x27;t bail to give an email. Now every drop-off is reachable by retargeting.</div></div>
+<div class="annoconn" style="left:840px;top:2208px;width:40px"></div>
+<div class="card anno annogood" data-id="anno-annogood-7" data-x="880" data-y="2180" style="left:880px;top:2180px;width:360px"><button class="cardel" title="Delete">&times;</button><div class="annotitle">Low-stakes data, neutral framing</div><div class="annobody">Easy to give once committed. The unit toggle removes any mental friction. Quietly gathering the BMI inputs.</div></div>
+<div class="annoconn" style="left:840px;top:2498px;width:40px"></div>
+<div class="card anno annogood" data-id="anno-annogood-8" data-x="880" data-y="2470" style="left:880px;top:2470px;width:360px"><button class="cardel" title="Delete">&times;</button><div class="annotitle">The number that unlocks the dream</div><div class="annobody">A sensitive number, given because the very next screen pays it straight back with a personalised result.</div></div>
+<div class="annoconn" style="left:840px;top:2788px;width:40px"></div>
+<div class="card anno annogood" data-id="anno-annogood-9" data-x="880" data-y="2760" style="left:880px;top:2760px;width:360px"><button class="cardel" title="Delete">&times;</button><div class="annotitle">Confidence of outcome, up front</div><div class="annobody">&#x27;You could lose 20kg&#x27;, drawn from THEIR numbers, before any hard question. The moment hope becomes specific and believable.</div></div>
+<div class="annoconn" style="left:840px;top:3078px;width:40px"></div>
+<div class="card anno annogood" data-id="anno-annogood-10" data-x="880" data-y="3050" style="left:880px;top:3050px;width:360px"><button class="cardel" title="Delete">&times;</button><div class="annotitle">Let them picture the destination</div><div class="annobody">Naming a goal weight deepens the visualisation. They are now imagining the &#x27;after&#x27;.</div></div>
+<div class="annoconn" style="left:840px;top:3368px;width:40px"></div>
+<div class="card anno annogood" data-id="anno-annogood-11" data-x="880" data-y="3340" style="left:880px;top:3340px;width:360px"><button class="cardel" title="Delete">&times;</button><div class="annotitle">Real medicine, tailored to you</div><div class="annobody">Clinically relevant and signals thoroughness. The &#x27;Why we ask&#x27; link adds trust through transparency.</div></div>
+<div class="annoconn" style="left:840px;top:3658px;width:40px"></div>
+<div class="card anno annogood" data-id="anno-annogood-12" data-x="880" data-y="3630" style="left:880px;top:3630px;width:360px"><button class="cardel" title="Delete">&times;</button><div class="annotitle">Clinical gating, done respectfully</div><div class="annobody">Needed for safety, and it keeps the &#x27;proper medical care&#x27; frame that justifies the price later.</div></div>
+<div class="annoconn" style="left:840px;top:3948px;width:40px"></div>
+<div class="card anno annogood" data-id="anno-annogood-13" data-x="880" data-y="3920" style="left:880px;top:3920px;width:360px"><button class="cardel" title="Delete">&times;</button><div class="annotitle">Safety screen = seriousness</div><div class="annobody">A real exclusion. Each safety question quietly proves this is legitimate medicine, not a gimmick.</div></div>
+<div class="annoconn" style="left:840px;top:4238px;width:40px"></div>
+<div class="card anno annogood" data-id="anno-annogood-14" data-x="880" data-y="4210" style="left:880px;top:4210px;width:360px"><button class="cardel" title="Delete">&times;</button><div class="annotitle">Informed-consent moment</div><div class="annobody">Real consequences make it feel real. Seriousness raises the perceived value of what they&#x27;re about to get.</div></div>
+<div class="annoconn" style="left:840px;top:4528px;width:40px"></div>
+<div class="card anno annogood" data-id="anno-annogood-15" data-x="880" data-y="4500" style="left:880px;top:4500px;width:360px"><button class="cardel" title="Delete">&times;</button><div class="annotitle">Anchor the struggle as lifelong</div><div class="annobody">&#x27;Most of my life&#x27; validates that it was never a willpower failure. Sets up &#x27;so this time is different&#x27;.</div></div>
+<div class="annoconn" style="left:840px;top:4818px;width:40px"></div>
+<div class="card anno annogood" data-id="anno-annogood-16" data-x="880" data-y="4790" style="left:880px;top:4790px;width:360px"><button class="cardel" title="Delete">&times;</button><div class="annotitle">You&#x27;ve tried everything</div><div class="annobody">Listing past failures builds commitment and reframes the problem. It was never about trying harder, priming the mechanism.</div></div>
+<div class="annoconn" style="left:840px;top:5108px;width:40px"></div>
+<div class="card anno annogood" data-id="anno-annogood-17" data-x="880" data-y="5080" style="left:880px;top:5080px;width:360px"><button class="cardel" title="Delete">&times;</button><div class="annotitle">Mine the pain (movement)</div><div class="annobody">Surfaces specific frustrations. The more they articulate, the more invested and understood they feel.</div></div>
+<div class="annoconn" style="left:840px;top:5398px;width:40px"></div>
+<div class="card anno annogood" data-id="anno-annogood-18" data-x="880" data-y="5370" style="left:880px;top:5370px;width:360px"><button class="cardel" title="Delete">&times;</button><div class="annotitle">Name the exact GLP-1 symptoms</div><div class="annobody">Hunger, cravings, snacking, the very things the drug fixes. They&#x27;re describing their problem in Voy&#x27;s solution language.</div></div>
+<div class="annoconn" style="left:840px;top:5688px;width:40px"></div>
+<div class="card anno annogood" data-id="anno-annogood-19" data-x="880" data-y="5660" style="left:880px;top:5660px;width:360px"><button class="cardel" title="Delete">&times;</button><div class="annotitle">The yo-yo wound</div><div class="annobody">&#x27;I lose it then put it back on&#x27; is the deepest fear. Surfacing it sets up the maintenance promise.</div></div>
+<div class="annoconn" style="left:840px;top:5978px;width:40px"></div>
+<div class="card anno annogood" data-id="anno-annogood-20" data-x="880" data-y="5950" style="left:880px;top:5950px;width:360px"><button class="cardel" title="Delete">&times;</button><div class="annotitle">Thoroughness = trust</div><div class="annobody">A long safety list feels rigorous. Rigour signals real clinicians and justifies the cost (and is genuine gating).</div></div>
+<div class="annoconn" style="left:840px;top:6268px;width:40px"></div>
+<div class="card anno annogood" data-id="anno-annogood-21" data-x="880" data-y="6240" style="left:880px;top:6240px;width:360px"><button class="cardel" title="Delete">&times;</button><div class="annotitle">Rapid safety cadence</div><div class="annobody">Quick yes/no screens keep momentum while stacking the impression of careful, proper care.</div></div>
+<div class="annoconn" style="left:840px;top:6558px;width:40px"></div>
+<div class="card anno annogood" data-id="anno-annogood-22" data-x="880" data-y="6530" style="left:880px;top:6530px;width:360px"><button class="cardel" title="Delete">&times;</button><div class="annotitle">Qualify and reframe</div><div class="annobody">These can lower the eligibility bar and tailor the plan, and reframe weight as a health issue, not vanity.</div></div>
+<div class="annoconn" style="left:840px;top:6848px;width:40px"></div>
+<div class="card anno annogood" data-id="anno-annogood-23" data-x="880" data-y="6820" style="left:880px;top:6820px;width:360px"><button class="cardel" title="Delete">&times;</button><div class="annotitle">Bespoke, not off-the-shelf</div><div class="annobody">Checking interactions makes the eventual plan feel personally vetted for them.</div></div>
+<div class="annoconn" style="left:840px;top:7138px;width:40px"></div>
+<div class="card anno annogood" data-id="anno-annogood-24" data-x="880" data-y="7110" style="left:880px;top:7110px;width:360px"><button class="cardel" title="Delete">&times;</button><div class="annotitle">Final safety gate</div><div class="annobody">Closes the clinical loop. By now they feel properly assessed, which is exactly the feeling that converts.</div></div>
+<div class="annoconn" style="left:840px;top:7428px;width:40px"></div>
+<div class="card anno annogood" data-id="anno-annogood-25" data-x="880" data-y="7400" style="left:880px;top:7400px;width:360px"><button class="cardel" title="Delete">&times;</button><div class="annotitle">Framed as safer for you</div><div class="annobody">Positions data-sharing as care, not admin. Builds the responsible, trustworthy image.</div></div>
+<div class="annoconn" style="left:840px;top:7718px;width:40px"></div>
+<div class="card anno annogood" data-id="anno-annogood-26" data-x="880" data-y="7690" style="left:880px;top:7690px;width:360px"><button class="cardel" title="Delete">&times;</button><div class="annotitle">Anchoring the choice</div><div class="annobody">&#x27;GLP-1 up to 23%&#x27; beside &#x27;Orlistat up to 8%&#x27; makes the premium option obvious; &#x27;clinician&#x27;s recommendation&#x27; lets the unsure defer to authority.</div></div>
+<div class="annoconn" style="left:840px;top:8008px;width:40px"></div>
+<div class="card anno annogood" data-id="anno-annogood-27" data-x="880" data-y="7980" style="left:880px;top:7980px;width:360px"><button class="cardel" title="Delete">&times;</button><div class="annotitle">Set up the recommendation</div><div class="annobody">Their priorities (results, easy, consistent) get fed back so the plan feels chosen for them.</div></div>
+<div class="annoconn" style="left:840px;top:8298px;width:40px"></div>
+<div class="card anno annogood" data-id="anno-annogood-28" data-x="880" data-y="8270" style="left:880px;top:8270px;width:360px"><button class="cardel" title="Delete">&times;</button><div class="annotitle">Last gate, full lock-in</div><div class="annobody">Agreeing to several statements is a final commitment just before the reveal.</div></div>
+<div class="annoconn" style="left:840px;top:8588px;width:40px"></div>
+<div class="card anno annogood" data-id="anno-annogood-29" data-x="880" data-y="8560" style="left:880px;top:8560px;width:360px"><button class="cardel" title="Delete">&times;</button><div class="annotitle">Labour illusion</div><div class="annobody">A deliberate pause with a named doctor makes the result feel computed and bespoke. Anticipation builds value.</div></div>
+<div class="annoconn" style="left:840px;top:8878px;width:40px"></div>
+<div class="card anno annogood" data-id="anno-annogood-30" data-x="880" data-y="8850" style="left:880px;top:8850px;width:360px"><button class="cardel" title="Delete">&times;</button><div class="annotitle">De-risk the dream</div><div class="annobody">Personalised graph + Medical Director + money-back promise. The outcome made concrete AND risk-free, exactly what a burned-out dieter needs.</div></div>
+<div class="annoconn" style="left:840px;top:9168px;width:40px"></div>
+<div class="card anno annogood" data-id="anno-annogood-31" data-x="880" data-y="9140" style="left:880px;top:9140px;width:360px"><button class="cardel" title="Delete">&times;</button><div class="annotitle">Self-diagnosis in their words</div><div class="annobody">Appetite, digestion, cravings, the pains they ticked, returned as the mechanism. They conclude they need it themselves.</div></div>
+<div class="annoconn" style="left:840px;top:9458px;width:40px"></div>
+<div class="card anno annogood" data-id="anno-annogood-32" data-x="880" data-y="9430" style="left:880px;top:9430px;width:360px"><button class="cardel" title="Delete">&times;</button><div class="annotitle">Borrow authority</div><div class="annobody">Dr Chaudry frames the journey. A trusted face lowers anxiety right before the offer.</div></div>
+<div class="annoconn" style="left:840px;top:9748px;width:40px"></div>
+<div class="card anno annogood" data-id="anno-annogood-33" data-x="880" data-y="9720" style="left:880px;top:9720px;width:360px"><button class="cardel" title="Delete">&times;</button><div class="annotitle">Remove the &#x27;what if it goes wrong&#x27;</div><div class="annobody">Free clinician messaging answers the side-effect worry that stops people buying GLP-1.</div></div>
+<div class="annoconn" style="left:840px;top:10038px;width:40px"></div>
+<div class="card anno annogood" data-id="anno-annogood-34" data-x="880" data-y="10010" style="left:880px;top:10010px;width:360px"><button class="cardel" title="Delete">&times;</button><div class="annotitle">Stack the value</div><div class="annobody">Tracking, dose adjustments, app, all loaded up just before the price so the number lands against a full basket.</div></div>
+<div class="annoconn" style="left:840px;top:10328px;width:40px"></div>
+<div class="card anno annogood" data-id="anno-annogood-35" data-x="880" data-y="10300" style="left:880px;top:10300px;width:360px"><button class="cardel" title="Delete">&times;</button><div class="annotitle">Reframe category + handle objections</div><div class="annobody">Leads with the pill (&#x27;no needles&#x27;) and an AI Q&amp;A that kills last-minute doubts inline, without leaving the flow.</div></div>
+<div class="annoconn" style="left:840px;top:10618px;width:40px"></div>
+<div class="card anno annogood" data-id="anno-annogood-36" data-x="880" data-y="10590" style="left:880px;top:10590px;width:360px"><button class="cardel" title="Delete">&times;</button><div class="annotitle">Anchored, discounted, urgent</div><div class="annobody">£154 to £79 first month, ongoing price deferred, ships-soon urgency. It feels like a deal, not a commitment.</div></div>
+<div class="annoconn" style="left:840px;top:10908px;width:40px"></div>
+<div class="card anno annogood" data-id="anno-annogood-37" data-x="880" data-y="10880" style="left:880px;top:10880px;width:360px"><button class="cardel" title="Delete">&times;</button><div class="annotitle">Order-bump at peak intent</div><div class="annobody">Right after the yes, a small £19/mo add-on lifts order value while they&#x27;re already in buying mode.</div></div>
+<div class="annoconn" style="left:840px;top:11198px;width:40px"></div>
+<div class="card anno annogood" data-id="anno-annogood-38" data-x="880" data-y="11170" style="left:880px;top:11170px;width:360px"><button class="cardel" title="Delete">&times;</button><div class="annotitle">Confidence even at the end</div><div class="annobody">Inline account (no forced login), upsell in cart, value stack, £263 to £188. The final screen still sells the result.</div></div>
+<div class="annoconn fix" style="left:1700px;top:178px;width:40px"></div>
+<div class="card anno annofix" data-id="anno-annofix-0" data-x="1740" data-y="150" style="left:1740px;top:150px;width:360px"><button class="cardel" title="Delete">&times;</button><div class="annotitle">Opens cold</div><div class="annobody">No warm-up, no proof, no outcome. The funnel starts on a dry form field.</div></div>
+<div class="annoconn fix" style="left:1700px;top:1338px;width:40px"></div>
+<div class="card anno annofix" data-id="anno-annofix-1" data-x="1740" data-y="1310" style="left:1740px;top:1310px;width:360px"><button class="cardel" title="Delete">&times;</button><div class="annotitle">Intake, not persuasion</div><div class="annobody">Pure medical questions. No pain or motivation questions, so no commitment and nothing to mirror back.</div></div>
+<div class="annoconn fix" style="left:1700px;top:2498px;width:40px"></div>
+<div class="card anno annofix" data-id="anno-annofix-2" data-x="1740" data-y="2470" style="left:1740px;top:2470px;width:360px"><button class="cardel" title="Delete">&times;</button><div class="annotitle">The dream, buried</div><div class="annobody">Bliss does compute “up to 19.9kg”, but shows it as small text above the product. This should be the hero moment.</div></div>
+<div class="annoconn fix" style="left:1700px;top:3078px;width:40px"></div>
+<div class="card anno annofix" data-id="anno-annofix-3" data-x="1740" data-y="3050" style="left:1740px;top:3050px;width:360px"><button class="cardel" title="Delete">&times;</button><div class="annotitle">Leads with needles</div><div class="annobody">The Mounjaro injection is front and centre with no “no-needle” reframe. The scariest part, unsoftened.</div></div>
+<div class="annoconn fix" style="left:1700px;top:3368px;width:40px"></div>
+<div class="card anno annofix" data-id="anno-annofix-4" data-x="1740" data-y="3340" style="left:1740px;top:3340px;width:360px"><button class="cardel" title="Delete">&times;</button><div class="annotitle">The default fights LTV</div><div class="annobody">Pre-selects 1-month (priciest per month, lowest lifetime value) while labelling the others “Recommended”.</div></div>
+<div class="annoconn fix" style="left:1700px;top:3658px;width:40px"></div>
+<div class="card anno annofix" data-id="anno-annofix-5" data-x="1740" data-y="3630" style="left:1740px;top:3630px;width:360px"><button class="cardel" title="Delete">&times;</button><div class="annotitle">Transactional dead-end</div><div class="annobody">Forced sign-in + ID notice, no value stack, no upsell. It stops selling exactly when it should sell hardest.</div></div>
+<div class="sidehead pbhead" style="left:-900px;top:0px;width:720px">THE PLAYBOOK  -  how winning funnels convert</div>
+<div class="card sidecard pb" data-id="side-pb-1" data-x="-900" data-y="120" style="left:-900px;top:120px;width:720px"><button class="cardel" title="Delete">&times;</button><div class="sidetitle"><span class="snum">1</span>Belief before effort</div><div class="sidebody">The lifelong struggler&#x27;s first question is not &#x27;is this safe&#x27; or &#x27;how much&#x27;. It is &#x27;will this actually work for me, after everything I have already tried and failed&#x27;. So Voy front-loads belief: 100k users, named before-and-afters, Trustpilot, then a personalised projection built from your own numbers, all before a single hard question. And it bookends it, reinforcing the dream again at the assessment and even at checkout. People remember the peak and the ending, so Voy makes both of them the outcome. You earn the right to ask for data only after you have made them believe.</div></div>
+<div class="card sidecard pb" data-id="side-pb-2" data-x="-900" data-y="440" style="left:-900px;top:440px;width:720px"><button class="cardel" title="Delete">&times;</button><div class="sidetitle"><span class="snum">2</span>It&#x27;s not your fault</div><div class="sidebody">This is the emotional core for this customer. Years of failed diets have taught them to blame their own willpower. Voy reframes the problem from character to biology: how long have you struggled, what have you tried, what happens when you try to stay on track. Every answer quietly says the same thing: you did try, it was never enough, and that is not a moral failing, it is a mechanism willpower was never going to beat. Remove the shame and you remove the biggest objection of all, &#x27;I should just try harder on my own&#x27;.</div></div>
+<div class="card sidecard pb" data-id="side-pb-3" data-x="-900" data-y="760" style="left:-900px;top:760px;width:720px"><button class="cardel" title="Delete">&times;</button><div class="sidetitle"><span class="snum">3</span>Make them prescribe themselves</div><div class="sidebody">Voy never says &#x27;you need this drug&#x27;. It pulls the pain out in the customer&#x27;s own words (hunger, cravings, snacking, yo-yoing) and mirrors those exact words back on the results page as &#x27;how the medication helps you&#x27;. Self-generated conclusions are unshakeable in a way a brand&#x27;s claims never are. By the end the customer feels they diagnosed themselves and chose the solution, rather than being sold to.</div></div>
+<div class="card sidecard pb" data-id="side-pb-4" data-x="-900" data-y="1080" style="left:-900px;top:1080px;width:720px"><button class="cardel" title="Delete">&times;</button><div class="sidetitle"><span class="snum">4</span>Order is engineered, not arbitrary</div><div class="sidebody">Easy, ego-friendly questions go first to build momentum and commitment, because each small yes makes the next more likely. The scary or boring parts, the long medical screen and the price, are deliberately pushed to the back half once the customer is invested and has already seen the dream. Nothing about the sequence is accidental.</div></div>
+<div class="card sidecard pb" data-id="side-pb-5" data-x="-900" data-y="1400" style="left:-900px;top:1400px;width:720px"><button class="cardel" title="Delete">&times;</button><div class="sidetitle"><span class="snum">5</span>Personalisation is proof of care</div><div class="sidebody">&#x27;Treatment built around you&#x27;, your numbers, your answers, a named Medical Director, a plan that adjusts to your dose. Every personalised touch does double duty: it makes the plan feel impossible to decline because it was built for them, and it signals real, careful medicine rather than an off-the-shelf product. For someone nervous about a serious medication, that feeling of being properly assessed is exactly what converts.</div></div>
+<div class="card sidecard pb" data-id="side-pb-6" data-x="-900" data-y="1720" style="left:-900px;top:1720px;width:720px"><button class="cardel" title="Delete">&times;</button><div class="sidetitle"><span class="snum">6</span>De-risk every fear before you ask for the sale</div><div class="sidebody">Each objection that could stop a purchase is pre-handled before it can surface. Is it safe: clinicians and pharmacy badges. Will it work: a money-back guarantee. What about side effects: free clinician messaging. I hate needles: lead with the pill. By the time the price appears, every reason to say no has already been quietly answered.</div></div>
+<div class="card sidecard pb" data-id="side-pb-7" data-x="-900" data-y="2040" style="left:-900px;top:2040px;width:720px"><button class="cardel" title="Delete">&times;</button><div class="sidetitle"><span class="snum">7</span>The default is the decision</div><div class="sidebody">Most people accept whatever is pre-selected. Voy pre-selects an answer on nearly every question to cut friction, and pre-selects a longer plan to lift lifetime value. Defaults are not a convenience, they are a lever. Bliss pre-selects nothing, adding friction on every step, and defaults to its worst, shortest plan.</div></div>
+<div class="card sidecard pb" data-id="side-pb-8" data-x="-900" data-y="2360" style="left:-900px;top:2360px;width:720px"><button class="cardel" title="Delete">&times;</button><div class="sidetitle"><span class="snum">8</span>Never a bare price, always a basket</div><div class="sidebody">Voy never shows a naked number. It anchors (154 down to 79 for the first month), stacks value (app, tracking, clinician support, starter kit), adds a guarantee, and defers the ongoing cost until after commitment. The price always lands against a full, discounted, de-risked basket, so it reads as a deal rather than a spend.</div></div>
+<div class="card sidecard pb" data-id="side-pb-9" data-x="-900" data-y="2680" style="left:-900px;top:2680px;width:720px"><button class="cardel" title="Delete">&times;</button><div class="sidetitle"><span class="snum">9</span>Maximise order value at peak intent (the upsell)</div><div class="sidebody">The most valuable instant in any funnel is the moment right after the customer says yes, when their guard is down and buying momentum is highest. Voy harvests it: the second you pick a plan it offers a Replenish supplement at 19/mo as a one-tap order-bump, shows it again in your cart at checkout, and surrounds the medication with a value stack of included extras. None of it adds friction to the core purchase, it just collects the intent already there. Bliss has no upsell anywhere, pure revenue left on the table at the cheapest moment to capture it.</div></div>
+<div class="card sidecard pb" data-id="side-pb-10" data-x="-900" data-y="3000" style="left:-900px;top:3000px;width:720px"><button class="cardel" title="Delete">&times;</button><div class="sidetitle"><span class="snum">10</span>Win the switcher, not just new patients</div><div class="sidebody">A huge and fast-growing slice of this market is already on Mounjaro or Wegovy somewhere else, shopping for a better price or experience. The moment you say you have taken treatment before, Voy opens a dedicated branch: where did you last get it (logging which competitors it is winning from), which medication and dose, how recently, any side effects, then it pitches a safe switch to Wegovy with a head-to-head efficacy chart. That conquests rivals by name, leads with the cost-saving angle switchers care about, and reassures them the switch is clinically safe. Bliss does nothing when you say yes, treating a ready-to-buy switcher exactly like a nervous first-timer.</div></div>
+<div class="sidehead usphead" style="left:-900px;top:3360px;width:720px">ONLY BLISS CAN SAY THIS  -  our unfair advantages</div>
+<div class="card sidecard usp" data-id="side-usp-1" data-x="-900" data-y="3480" style="left:-900px;top:3480px;width:720px"><button class="cardel" title="Delete">&times;</button><div class="sidetitle"><span class="snum">1</span>A real human nutritionist, not an AI app</div><div class="sidebody">Every Bliss customer gets a one-to-one qualified nutritionist, the same one through their whole journey, reachable anytime in a dashboard, with diet plans and &#x27;rate my plate&#x27;. It is bundled in, not an add-on. Claire&#x27;s words: &#x27;real life, not AI... for a nutritionist you want someone real speaking to you&#x27;. This is the spear straight into Voy and Juniper, who run app and AI experiences (Voy even puts an AI Q&amp;A bot on its plan page). Lean into the anti-AI mood: you will not do this alone, a real expert is by your side the whole way. It directly calms the nervous first-timer, because GLP-1 feels like a big, scary jump.</div></div>
+<div class="card sidecard usp" data-id="side-usp-2" data-x="-900" data-y="3800" style="left:-900px;top:3800px;width:720px"><button class="cardel" title="Delete">&times;</button><div class="sidetitle"><span class="snum">2</span>Backed by a real UK pharmacy and a medical director</div><div class="sidebody">Express Healthcare and Pharmacy Online sit behind Bliss. Real pharmacists run the assessment, there is an on-call Medical Director who reviews care and content, and it is GPhC-registered. Voy leans on its Dr Chaudry hard; Bliss has its own doctor and a real pharmacy. Put them up front: real pharmacy, real doctor, real nutritionist, not a faceless app.</div></div>
+<div class="card sidecard usp" data-id="side-usp-3" data-x="-900" data-y="4120" style="left:-900px;top:4120px;width:720px"><button class="cardel" title="Delete">&times;</button><div class="sidetitle"><span class="snum">3</span>The Wegovy pill, no needles (first-mover)</div><div class="sidebody">Bliss is launching early specifically to lead the oral pill. You can show it, no needle-hiding, and demand is already huge (1,000+ pre-orders, ~10k on the database). Lead the launch funnel on &#x27;the new pill, no needles&#x27; as the hero, with pre-order or waitlist urgency. Same &#x27;no needles&#x27; reframe Voy uses, except Bliss can own the pill story.</div></div>
+<div class="card sidecard usp" data-id="side-usp-4" data-x="-900" data-y="4440" style="left:-900px;top:4440px;width:720px"><button class="cardel" title="Delete">&times;</button><div class="sidetitle"><span class="snum">4</span>Coaching through the change and the side effects</div><div class="sidebody">The nutritionist helps with what to eat, muscle-loss and hair tips, and the brand is deliberately serious and lifestyle-led. Position Bliss as &#x27;we get you through it&#x27;, not a vending machine for medication. Surface the real fears (muscle loss, hair thinning) and answer them with human support. Voy stacks app features; Bliss stacks human care.</div></div>
+<div class="card sidecard usp" data-id="side-usp-5" data-x="-900" data-y="4760" style="left:-900px;top:4760px;width:720px"><button class="cardel" title="Delete">&times;</button><div class="sidetitle"><span class="snum">5</span>One place for the medication, the nutrition, and the fix for side effects (the vision)</div><div class="sidebody">Phase 2 is Bliss-owned supplements (daily pouches, then pick-and-mix by side effect), plus PTs and peptides later. True vertical integration and the long-term retention engine. Even before it is live we can tease &#x27;your whole journey in one place&#x27;. It shapes positioning now and becomes the LTV machine later.</div></div>
+<div class="sidehead recohead" style="left:2360px;top:80px;width:470px">BLISS &mdash; RECOMMENDED FUNNEL</div>
+<div class="card recocard new" data-id="reco-1" data-x="2360" data-y="200" style="left:2360px;top:200px;width:470px"><button class="cardel" title="Delete">&times;</button><div class="recoflag new">NEW</div><div class="recotitle"><span class="rnum">1</span>Where are you right now?</div><div class="recobody">One-tap intent (just exploring vs ready to start). A frictionless first yes that builds momentum. Fixes Bliss opening cold on a form.</div></div>
+<div class="vline" style="left:2595px;top:400px;height:50px"></div>
+<div class="card recocard new" data-id="reco-2" data-x="2360" data-y="450" style="left:2360px;top:450px;width:470px"><button class="cardel" title="Delete">&times;</button><div class="recoflag new">NEW</div><div class="recotitle"><span class="rnum">2</span>Social proof wall</div><div class="recobody">Real Bliss results, reviews score, member count, before-and-afters. Make them believe it can work before asking for anything.</div></div>
+<div class="vline" style="left:2595px;top:650px;height:50px"></div>
+<div class="card recocard new" data-id="reco-3" data-x="2360" data-y="700" style="left:2360px;top:700px;width:470px"><button class="cardel" title="Delete">&times;</button><div class="recoflag new">NEW</div><div class="recotitle"><span class="rnum">3</span>The Bliss difference</div><div class="recobody">A real UK pharmacy, a real doctor, and a real nutritionist by your side, not an app. Legitimacy and the anti-AI edge, up front.</div></div>
+<div class="vline" style="left:2595px;top:900px;height:50px"></div>
+<div class="card recocard new" data-id="reco-4" data-x="2360" data-y="950" style="left:2360px;top:950px;width:470px"><button class="cardel" title="Delete">&times;</button><div class="recoflag new">NEW</div><div class="recotitle"><span class="rnum">4</span>Why do you want to lose weight?</div><div class="recobody">Multi-select. Self-stated motivation sticks harder and gives us their own words to use later.</div></div>
+<div class="vline" style="left:2595px;top:1150px;height:50px"></div>
+<div class="card recocard new" data-id="reco-5" data-x="2360" data-y="1200" style="left:2360px;top:1200px;width:470px"><button class="cardel" title="Delete">&times;</button><div class="recoflag new">NEW</div><div class="recotitle"><span class="rnum">5</span>You&#x27;re in the right place</div><div class="recobody">Quick validation that rewards the disclosure and reinforces the real-human-coach difference.</div></div>
+<div class="vline" style="left:2595px;top:1400px;height:50px"></div>
+<div class="card recocard fix" data-id="reco-6" data-x="2360" data-y="1450" style="left:2360px;top:1450px;width:470px"><button class="cardel" title="Delete">&times;</button><div class="recoflag fix">FIX</div><div class="recotitle"><span class="rnum">6</span>Used a GLP-1 before? (branch)</div><div class="recobody">Yes/No. Splits new patients from switchers. Today Bliss does nothing here; this opens the switcher branch (below).</div></div>
+<div class="vline" style="left:2595px;top:1650px;height:50px"></div>
+<div class="card recocard new" data-id="reco-7" data-x="2360" data-y="1700" style="left:2360px;top:1700px;width:470px"><button class="cardel" title="Delete">&times;</button><div class="recoflag new">NEW</div><div class="recotitle"><span class="rnum">7</span>Your email (with skip)</div><div class="recobody">Captured after they are invested but before the hard questions. Builds a retargeting list from drop-offs.</div></div>
+<div class="vline" style="left:2595px;top:1900px;height:50px"></div>
+<div class="card recocard keep" data-id="reco-8" data-x="2360" data-y="1950" style="left:2360px;top:1950px;width:470px"><button class="cardel" title="Delete">&times;</button><div class="recoflag keep">KEEP</div><div class="recotitle"><span class="rnum">8</span>Your height</div><div class="recobody">Unchanged from current Bliss.</div></div>
+<div class="vline" style="left:2595px;top:2150px;height:50px"></div>
+<div class="card recocard keep" data-id="reco-9" data-x="2360" data-y="2200" style="left:2360px;top:2200px;width:470px"><button class="cardel" title="Delete">&times;</button><div class="recoflag keep">KEEP</div><div class="recotitle"><span class="rnum">9</span>Your weight</div><div class="recobody">Unchanged from current Bliss.</div></div>
+<div class="vline" style="left:2595px;top:2400px;height:50px"></div>
+<div class="card recocard new" data-id="reco-10" data-x="2360" data-y="2450" style="left:2360px;top:2450px;width:470px"><button class="cardel" title="Delete">&times;</button><div class="recoflag new">NEW</div><div class="recotitle"><span class="rnum">10</span>Your personalised projection</div><div class="recobody">&#x27;You could reach Xkg, lose Ykg&#x27;, drawn from their own numbers. The outcome hero. Fixes the buried 19.9kg.</div></div>
+<div class="vline" style="left:2595px;top:2650px;height:50px"></div>
+<div class="card recocard new" data-id="reco-11" data-x="2360" data-y="2700" style="left:2360px;top:2700px;width:470px"><button class="cardel" title="Delete">&times;</button><div class="recoflag new">NEW</div><div class="recotitle"><span class="rnum">11</span>Goal weight?</div><div class="recobody">Let them picture the destination.</div></div>
+<div class="vline" style="left:2595px;top:2900px;height:50px"></div>
+<div class="card recocard keep" data-id="reco-12" data-x="2360" data-y="2950" style="left:2360px;top:2950px;width:470px"><button class="cardel" title="Delete">&times;</button><div class="recoflag keep">KEEP</div><div class="recotitle"><span class="rnum">12</span>Ethnicity (why we ask)</div><div class="recobody">Unchanged from current Bliss.</div></div>
+<div class="vline" style="left:2595px;top:3150px;height:50px"></div>
+<div class="card recocard keep" data-id="reco-13" data-x="2360" data-y="3200" style="left:2360px;top:3200px;width:470px"><button class="cardel" title="Delete">&times;</button><div class="recoflag keep">KEEP</div><div class="recotitle"><span class="rnum">13</span>Sex at birth</div><div class="recobody">Unchanged from current Bliss.</div></div>
+<div class="vline" style="left:2595px;top:3400px;height:50px"></div>
+<div class="card recocard keep" data-id="reco-14" data-x="2360" data-y="3450" style="left:2360px;top:3450px;width:470px"><button class="cardel" title="Delete">&times;</button><div class="recoflag keep">KEEP</div><div class="recotitle"><span class="rnum">14</span>Pregnancy / breastfeeding</div><div class="recobody">Unchanged from current Bliss.</div></div>
+<div class="vline" style="left:2595px;top:3650px;height:50px"></div>
+<div class="card recocard keep" data-id="reco-15" data-x="2360" data-y="3700" style="left:2360px;top:3700px;width:470px"><button class="cardel" title="Delete">&times;</button><div class="recoflag keep">KEEP</div><div class="recotitle"><span class="rnum">15</span>Contraception notice</div><div class="recobody">Unchanged from current Bliss.</div></div>
+<div class="vline" style="left:2595px;top:3900px;height:50px"></div>
+<div class="card recocard new" data-id="reco-16" data-x="2360" data-y="3950" style="left:2360px;top:3950px;width:470px"><button class="cardel" title="Delete">&times;</button><div class="recoflag new">NEW</div><div class="recotitle"><span class="rnum">16</span>How long have you struggled?</div><div class="recobody">Reframes years of failure as biology, not willpower. It is not your fault.</div></div>
+<div class="vline" style="left:2595px;top:4150px;height:50px"></div>
+<div class="card recocard new" data-id="reco-17" data-x="2360" data-y="4200" style="left:2360px;top:4200px;width:470px"><button class="cardel" title="Delete">&times;</button><div class="recoflag new">NEW</div><div class="recotitle"><span class="rnum">17</span>What have you tried before?</div><div class="recobody">You have tried everything, and it was never enough. Primes the mechanism.</div></div>
+<div class="vline" style="left:2595px;top:4400px;height:50px"></div>
+<div class="card recocard new" data-id="reco-18" data-x="2360" data-y="4450" style="left:2360px;top:4450px;width:470px"><button class="cardel" title="Delete">&times;</button><div class="recoflag new">NEW</div><div class="recotitle"><span class="rnum">18</span>Challenges with exercise?</div><div class="recobody">Unchanged from current Bliss.</div></div>
+<div class="vline" style="left:2595px;top:4650px;height:50px"></div>
+<div class="card recocard new" data-id="reco-19" data-x="2360" data-y="4700" style="left:2360px;top:4700px;width:470px"><button class="cardel" title="Delete">&times;</button><div class="recoflag new">NEW</div><div class="recotitle"><span class="rnum">19</span>Challenges with eating?</div><div class="recobody">Hunger, cravings, snacking. Name the exact GLP-1 symptoms in their own words.</div></div>
+<div class="vline" style="left:2595px;top:4900px;height:50px"></div>
+<div class="card recocard new" data-id="reco-20" data-x="2360" data-y="4950" style="left:2360px;top:4950px;width:470px"><button class="cardel" title="Delete">&times;</button><div class="recoflag new">NEW</div><div class="recotitle"><span class="rnum">20</span>Staying on track / yo-yo?</div><div class="recobody">Surface the deepest fear. Sets up the maintenance and nutritionist promise.</div></div>
+<div class="vline" style="left:2595px;top:5150px;height:50px"></div>
+<div class="card recocard keep" data-id="reco-21" data-x="2360" data-y="5200" style="left:2360px;top:5200px;width:470px"><button class="cardel" title="Delete">&times;</button><div class="recoflag keep">KEEP</div><div class="recotitle"><span class="rnum">21</span>Serious conditions (safety)</div><div class="recobody">Unchanged from current Bliss.</div></div>
+<div class="vline" style="left:2595px;top:5400px;height:50px"></div>
+<div class="card recocard fix" data-id="reco-22" data-x="2360" data-y="5450" style="left:2360px;top:5450px;width:470px"><button class="cardel" title="Delete">&times;</button><div class="recoflag fix">FIX</div><div class="recotitle"><span class="rnum">22</span>Medical screen, tightened</div><div class="recobody">Keep the safety questions but add &#x27;why we ask&#x27; and reassurance, so the grind reads as careful care, not friction.</div></div>
+<div class="vline" style="left:2595px;top:5650px;height:50px"></div>
+<div class="card recocard keep" data-id="reco-23" data-x="2360" data-y="5700" style="left:2360px;top:5700px;width:470px"><button class="cardel" title="Delete">&times;</button><div class="recoflag keep">KEEP</div><div class="recotitle"><span class="rnum">23</span>Other medications / allergies</div><div class="recobody">Unchanged from current Bliss.</div></div>
+<div class="vline" style="left:2595px;top:5900px;height:50px"></div>
+<div class="card recocard keep" data-id="reco-24" data-x="2360" data-y="5950" style="left:2360px;top:5950px;width:470px"><button class="cardel" title="Delete">&times;</button><div class="recoflag keep">KEEP</div><div class="recotitle"><span class="rnum">24</span>Share with your GP</div><div class="recobody">Unchanged from current Bliss.</div></div>
+<div class="vline" style="left:2595px;top:6150px;height:50px"></div>
+<div class="card recocard fix" data-id="reco-25" data-x="2360" data-y="6200" style="left:2360px;top:6200px;width:470px"><button class="cardel" title="Delete">&times;</button><div class="recoflag fix">FIX</div><div class="recotitle"><span class="rnum">25</span>Pill or injection?</div><div class="recobody">Anchor the Wegovy pill as the hero (no needles); injection as the alternative.</div></div>
+<div class="vline" style="left:2595px;top:6400px;height:50px"></div>
+<div class="card recocard new" data-id="reco-26" data-x="2360" data-y="6450" style="left:2360px;top:6450px;width:470px"><button class="cardel" title="Delete">&times;</button><div class="recoflag new">NEW</div><div class="recotitle"><span class="rnum">26</span>What matters most to you?</div><div class="recobody">Feeds the recommendation (results, ease, human support).</div></div>
+<div class="vline" style="left:2595px;top:6650px;height:50px"></div>
+<div class="card recocard keep" data-id="reco-27" data-x="2360" data-y="6700" style="left:2360px;top:6700px;width:470px"><button class="cardel" title="Delete">&times;</button><div class="recoflag keep">KEEP</div><div class="recotitle"><span class="rnum">27</span>Consent</div><div class="recobody">Unchanged from current Bliss.</div></div>
+<div class="vline" style="left:2595px;top:6900px;height:50px"></div>
+<div class="card recocard new" data-id="reco-28" data-x="2360" data-y="6950" style="left:2360px;top:6950px;width:470px"><button class="cardel" title="Delete">&times;</button><div class="recoflag new">NEW</div><div class="recotitle"><span class="rnum">28</span>Building your plan (loader)</div><div class="recobody">Labour illusion, fronted by the Bliss Medical Director.</div></div>
+<div class="vline" style="left:2595px;top:7150px;height:50px"></div>
+<div class="card recocard fix" data-id="reco-29" data-x="2360" data-y="7200" style="left:2360px;top:7200px;width:470px"><button class="cardel" title="Delete">&times;</button><div class="recoflag fix">FIX</div><div class="recotitle"><span class="rnum">29</span>Your assessment (hero)</div><div class="recobody">Big personalised result + money-back guarantee + why this is right for you + how it helps, mirroring their answers. Fixes the buried result.</div></div>
+<div class="vline" style="left:2595px;top:7400px;height:50px"></div>
+<div class="card recocard new" data-id="reco-30" data-x="2360" data-y="7450" style="left:2360px;top:7450px;width:470px"><button class="cardel" title="Delete">&times;</button><div class="recoflag new">NEW</div><div class="recotitle"><span class="rnum">30</span>Meet your nutritionist</div><div class="recobody">You will not do this alone. A real, qualified nutritionist with you the whole way, message anytime. The moment Voy cannot match.</div></div>
+<div class="vline" style="left:2595px;top:7650px;height:50px"></div>
+<div class="card recocard new" data-id="reco-31" data-x="2360" data-y="7700" style="left:2360px;top:7700px;width:470px"><button class="cardel" title="Delete">&times;</button><div class="recoflag new">NEW</div><div class="recotitle"><span class="rnum">31</span>We get you through the side effects</div><div class="recobody">Muscle loss, hair, energy: your nutritionist and our pharmacists have you covered.</div></div>
+<div class="vline" style="left:2595px;top:7900px;height:50px"></div>
+<div class="card recocard new" data-id="reco-32" data-x="2360" data-y="7950" style="left:2360px;top:7950px;width:470px"><button class="cardel" title="Delete">&times;</button><div class="recoflag new">NEW</div><div class="recotitle"><span class="rnum">32</span>Real pharmacy, doctor, nutritionist</div><div class="recobody">Trust stack: a real pharmacy, a real doctor, real human support, not a faceless app.</div></div>
+<div class="vline" style="left:2595px;top:8150px;height:50px"></div>
+<div class="card recocard fix" data-id="reco-33" data-x="2360" data-y="8200" style="left:2360px;top:8200px;width:470px"><button class="cardel" title="Delete">&times;</button><div class="recoflag fix">FIX</div><div class="recotitle"><span class="rnum">33</span>Your plan: the pill + your nutritionist</div><div class="recobody">Product page reframed around no-needles and the human bundle.</div></div>
+<div class="vline" style="left:2595px;top:8400px;height:50px"></div>
+<div class="card recocard fix" data-id="reco-34" data-x="2360" data-y="8450" style="left:2360px;top:8450px;width:470px"><button class="cardel" title="Delete">&times;</button><div class="recoflag fix">FIX</div><div class="recotitle"><span class="rnum">34</span>Pricing + plan length</div><div class="recobody">Anchored first-month discount, DEFAULT to a longer plan (3 to 6 months), value stack (meds + nutritionist + dashboard + support), guarantee. Fixes the 1-month default.</div></div>
+<div class="vline" style="left:2595px;top:8650px;height:50px"></div>
+<div class="card recocard new" data-id="reco-35" data-x="2360" data-y="8700" style="left:2360px;top:8700px;width:470px"><button class="cardel" title="Delete">&times;</button><div class="recoflag new">NEW</div><div class="recotitle"><span class="rnum">35</span>Order-bump: daily support pouch</div><div class="recobody">Add Bliss vitamins for energy, hair and muscle at a small monthly price. Captures peak intent and teases vertical integration.</div></div>
+<div class="vline" style="left:2595px;top:8900px;height:50px"></div>
+<div class="card recocard fix" data-id="reco-36" data-x="2360" data-y="8950" style="left:2360px;top:8950px;width:470px"><button class="cardel" title="Delete">&times;</button><div class="recoflag fix">FIX</div><div class="recotitle"><span class="rnum">36</span>Checkout, branded</div><div class="recobody">Inline account (no forced sign-in), order summary with the value stack and stacked discounts, &#x27;your nutritionist is waiting&#x27;. Fixes the transactional dead-end.</div></div>
+<div class="vline" style="left:2595px;top:9150px;height:50px"></div>
+<div class="sidehead subhead" style="left:2360px;top:9240px;width:470px">SWITCHER BRANCH &middot; if YES at step 6</div>
+<div class="card recocard new" data-id="reco-S1" data-x="2360" data-y="9350" style="left:2360px;top:9350px;width:470px"><button class="cardel" title="Delete">&times;</button><div class="recoflag new">NEW</div><div class="recotitle"><span class="rnum">S1</span>Switch to Bliss, keep your progress</div><div class="recobody">For people already on a GLP-1: switch and save, with a real nutritionist included.</div></div>
+<div class="card recocard new" data-id="reco-S2" data-x="2360" data-y="9600" style="left:2360px;top:9600px;width:470px"><button class="cardel" title="Delete">&times;</button><div class="recoflag new">NEW</div><div class="recotitle"><span class="rnum">S2</span>Where did you last get it?</div><div class="recobody">Competitor list (Voy, Juniper, Numan, Boots...). Conquest intel plus tailoring.</div></div>
+<div class="card recocard new" data-id="reco-S3" data-x="2360" data-y="9850" style="left:2360px;top:9850px;width:470px"><button class="cardel" title="Delete">&times;</button><div class="recoflag new">NEW</div><div class="recotitle"><span class="rnum">S3</span>Which medication and dose?</div><div class="recobody">Unchanged from current Bliss.</div></div>
+<div class="card recocard new" data-id="reco-S4" data-x="2360" data-y="10100" style="left:2360px;top:10100px;width:470px"><button class="cardel" title="Delete">&times;</button><div class="recoflag new">NEW</div><div class="recotitle"><span class="rnum">S4</span>How recently? Any side effects?</div><div class="recobody">Bridges into &#x27;and here is how your nutritionist helps with exactly that&#x27;.</div></div></div></div>
+<div id="lightbox"><div class="lbhint">click anywhere or press Esc to close</div><img alt=""/><div class="lbcap"></div></div>
+<script>
+const stage=document.getElementById('stage'), world=document.getElementById('world'), zlvl=document.getElementById('zlvl');
+let scale=1,tx=0,ty=0;
+function apply(){world.style.transform=`translate(${tx}px,${ty}px) scale(${scale})`;zlvl.textContent=Math.round(scale*100)+'%';}
+function worldBounds(){let mx=0,my=0;document.querySelectorAll('#world .card,#world .lane-head').forEach(e=>{mx=Math.max(mx,e.offsetLeft+e.offsetWidth);my=Math.max(my,e.offsetTop+e.offsetHeight);});return{mx,my};}
+function fit(){const b=worldBounds();const pad=80;const sw=stage.clientWidth-pad*2,sh=stage.clientHeight-pad*2;scale=Math.min(sw/b.mx,sh/b.my);scale=Math.max(.05,Math.min(1,scale));tx=pad;ty=pad;apply();}
+// pan
+let panning=false,sx,sy,moved=false;
+stage.addEventListener('mousedown',e=>{if(e.target.closest('.note')||e.target.closest('.card'))return;panning=true;moved=false;sx=e.clientX-tx;sy=e.clientY-ty;stage.classList.add('grabbing');});
+window.addEventListener('mousemove',e=>{if(!panning)return;tx=e.clientX-sx;ty=e.clientY-sy;moved=true;apply();});
+window.addEventListener('mouseup',()=>{panning=false;stage.classList.remove('grabbing');});
+// zoom toward cursor
+stage.addEventListener('wheel',e=>{e.preventDefault();const r=stage.getBoundingClientRect();const mx=e.clientX-r.left,my=e.clientY-r.top;const old=scale;const f=Math.exp(-e.deltaY*0.0015);scale=Math.max(.05,Math.min(3,scale*f));const k=scale/old;tx=mx-(mx-tx)*k;ty=my-(my-ty)*k;apply();},{passive:false});
+document.getElementById('zin').onclick=()=>{scale=Math.min(3,scale*1.2);apply();};
+document.getElementById('zout').onclick=()=>{scale=Math.max(.05,scale/1.2);apply();};
+document.getElementById('fit').onclick=fit;
+// ---- sticky notes ----
+const KEY='bliss_voy_funnel_notes';
+let notes=JSON.parse(localStorage.getItem(KEY)||'[]');
+function save(){localStorage.setItem(KEY,JSON.stringify(notes));}
+function renderNote(n,idx){
+  const d=document.createElement('div');d.className='note';d.style.left=n.x+'px';d.style.top=n.y+'px';
+  d.contentEditable=true;d.textContent=n.text||'';
+  const del=document.createElement('button');del.className='del';del.textContent='×';del.contentEditable=false;
+  del.onclick=ev=>{ev.stopPropagation();notes.splice(idx,1);save();paintNotes();};
+  d.appendChild(del);
+  d.addEventListener('input',()=>{n.text=d.childNodes[0]&&d.childNodes[0].nodeType===3?d.firstChild.textContent:d.textContent.replace('×','');n.text=d.innerText.replace('×','').trim();save();});
+  // drag note
+  let dn=false,ox,oy;
+  d.addEventListener('mousedown',ev=>{if(ev.target===del)return;dn=true;ox=ev.clientX;oy=ev.clientY;ev.stopPropagation();});
+  window.addEventListener('mousemove',ev=>{if(!dn)return;n.x+=(ev.clientX-ox)/scale;n.y+=(ev.clientY-oy)/scale;ox=ev.clientX;oy=ev.clientY;d.style.left=n.x+'px';d.style.top=n.y+'px';});
+  window.addEventListener('mouseup',()=>{if(dn){dn=false;save();}});
+  world.appendChild(d);
+}
+function paintNotes(){document.querySelectorAll('#world .note').forEach(e=>e.remove());notes.forEach(renderNote);}
+function addNoteAt(cx,cy){const wx=(cx-tx)/scale,wy=(cy-ty)/scale;notes.push({x:wx,y:wy,text:'New note'});save();paintNotes();}
+stage.addEventListener('dblclick',e=>{if(e.target.closest('.note'))return;const r=stage.getBoundingClientRect();addNoteAt(e.clientX-r.left,e.clientY-r.top);});
+document.getElementById('addnote').onclick=()=>{addNoteAt(stage.clientWidth/2,stage.clientHeight/2);};
+document.getElementById('clearnotes').onclick=()=>{if(confirm('Delete all sticky notes?')){notes=[];save();paintNotes();}};
+paintNotes();
+// ---- card move / delete (lightweight Miro editing) ----
+const LKEY='bliss_voy_funnel_layout';
+let layout=JSON.parse(localStorage.getItem(LKEY)||'{"pos":{},"del":{}}');
+function saveLayout(){localStorage.setItem(LKEY,JSON.stringify(layout));}
+function applyLayout(){
+  document.querySelectorAll('#world .card').forEach(c=>{
+    const id=c.dataset.id;
+    if(layout.del[id]){c.style.display='none';return;}
+    c.style.display='';
+    const p=layout.pos[id];
+    c.style.left=(p?p.x:c.dataset.x)+'px';
+    c.style.top=(p?p.y:c.dataset.y)+'px';
+  });
+}
+document.querySelectorAll('#world .card').forEach(c=>{
+  c.addEventListener('mousedown',e=>{
+    if(e.target.classList.contains('cardel'))return;
+    e.stopPropagation();
+    const sx=e.clientX, sy=e.clientY, tgt=e.target;
+    const startL=parseFloat(c.style.left)||0, startT=parseFloat(c.style.top)||0;
+    let moved=false;
+    function mv(ev){if(Math.abs(ev.clientX-sx)+Math.abs(ev.clientY-sy)>4)moved=true;c.style.left=(startL+(ev.clientX-sx)/scale)+'px';c.style.top=(startT+(ev.clientY-sy)/scale)+'px';}
+    function up(){window.removeEventListener('mousemove',mv);window.removeEventListener('mouseup',up);
+      if(moved){layout.pos[c.dataset.id]={x:parseFloat(c.style.left),y:parseFloat(c.style.top)};saveLayout();}
+      else if(tgt.tagName==='IMG'){const im=c.querySelector('img');openLightbox(im?im.src:'',c.querySelector('.lbl').innerText);}
+    }
+    window.addEventListener('mousemove',mv);window.addEventListener('mouseup',up);
+  });
+  c.querySelector('.cardel').addEventListener('click',e=>{e.stopPropagation();layout.del[c.dataset.id]=true;saveLayout();c.style.display='none';});
+});
+// ---- lightbox (click a screenshot to view full screen) ----
+const lb=document.getElementById('lightbox'), lbimg=lb.querySelector('img'), lbcap=lb.querySelector('.lbcap');
+function openLightbox(src,cap){lbimg.src=src;lbcap.textContent=cap||'';lb.style.display='flex';}
+function closeLightbox(){lb.style.display='none';lbimg.src='';}
+lb.addEventListener('click',closeLightbox);
+window.addEventListener('keydown',e=>{if(e.key==='Escape')closeLightbox();});
+applyLayout();
+let connHidden=false;
+document.getElementById('toggleconn').onclick=()=>{connHidden=!connHidden;document.querySelectorAll('#world .vline,#world .branchconn,#world .branchlbl').forEach(e=>e.style.visibility=connHidden?'hidden':'');document.getElementById('toggleconn').textContent=connHidden?'Show flow lines':'Hide flow lines';};
+document.getElementById('resetlayout').onclick=()=>{if(confirm('Reset all moved and deleted cards back to the original layout?')){layout={pos:{},del:{}};saveLayout();applyLayout();}};
+let annoHidden=false;
+document.getElementById('toggleanno').onclick=()=>{annoHidden=!annoHidden;document.querySelectorAll('#world .anno,#world .annoconn,#world .sidecard,#world .sidehead').forEach(e=>e.style.display=annoHidden?'none':'');document.getElementById('toggleanno').textContent=annoHidden?'Show annotations':'Hide annotations';};
+function initView(){scale=0.6;tx=600;ty=70;apply();}
+initView();
+window.addEventListener('load',initView);
+</script>
+</body></html>
